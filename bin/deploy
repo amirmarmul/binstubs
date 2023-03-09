@@ -2,7 +2,7 @@
 
 set -e 
 
-production=git@production.com/app.git
+production=git@github.com:amirmarmul/binstubs-prod.git
 if [ "$(git config remote.production.url)" != "$production" ]
 then 
     echo "[bin/deploy] Configuring production remote..."
@@ -12,3 +12,34 @@ fi
 
 base_branch=main 
 current_branch="$(git branch --show-current)"
+git fetch origin 
+git fetch production
+diff="$(git log origin/main...production/main)"
+
+if [ "$current_branch" != "$base_branch" ]
+then 
+    echo "[bin/deploy] Please checkout main first."
+    exit 1
+fi 
+
+if [ -n "$diff" ]
+then
+    echo "[bin/deploy] The following commits will be deployed:"
+    echo 
+    echo "$diff"
+    echo 
+    echo "[bin/deploy] Would you like to deploy these commits? [y/N]"
+    read -r response 
+    response="${response:-n}"
+    if [ "$response" = y ]
+    then 
+        bin/ci
+        git push production main
+    else 
+        echo "[bin/deploy] Exiting."
+        exit 0
+    fi
+else 
+    echo "[bin/deploy] There are no new commits to deploy."
+    exit 1
+fi
