@@ -1,0 +1,14 @@
+#!/bin/sh 
+
+set -e 
+
+production=git@production.com/app.git
+if [ "$(git config remote.production.url)" != "$production" ]
+then 
+    echo "[bin/deploy] Configuring production remote..."
+    git remote | grep production > /dev/null && git remote remove production
+    git remote add production $production
+fi 
+
+base_branch=main 
+current_branch="$(git branch --show-current)"
